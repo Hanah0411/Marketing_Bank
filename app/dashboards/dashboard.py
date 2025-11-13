@@ -35,7 +35,6 @@ def fetch_with_truth():
     return df
 
 # Opciones para dropdowns basadas en el dataset UCI Bank Marketing
-# === OPCIONES CORREGIDAS PARA EL MODELO ===
 job_options = [
     {'label': 'Administrativo', 'value': 'admin.'},
     {'label': 'Obrero', 'value': 'blue-collar'},
@@ -112,7 +111,6 @@ app.layout = html.Div([
         html.H3("Últimas predicciones"),
         dash_table.DataTable(id="table", page_size=8, style_table={"overflowX": "auto"})
     ]),
-    # Nueva sección para inputs de UI
     html.Div([
         html.H3("Hacer una Nueva Predicción"),
         html.Div([
@@ -182,7 +180,7 @@ app.layout = html.Div([
         html.Button("Predecir", id="predict-button", n_clicks=0, style={"margin": "10px"}),
         html.Div(id="prediction-output", style={"font-weight": "bold", "margin": "10px"}),
     ], style={"border": "1px solid #ccc", "padding": "20px", "margin-top": "20px"}),
-    dcc.Interval(id="interval", interval=10000, n_intervals=0)  # Actualizar cada 30 segundos
+    dcc.Interval(id="interval", interval=30000, n_intervals=0)
 ])
 
 @app.callback(
@@ -205,7 +203,7 @@ def update_dashboard(n):
         total_card = [html.H4("Total"), html.H2(metrics["total"])]
         pos_card = [html.H4("Positivos"), html.H2(metrics["positive"])]
         update_card = [html.H4("Última actualización"), html.P(str(metrics["last_update"]))]
-        # Accuracy
+
         df_truth = fetch_with_truth()
         if not df_truth.empty:
             acc = round(accuracy_score(df_truth["actual"], df_truth["predicted"]) * 100, 2)
@@ -215,15 +213,15 @@ def update_dashboard(n):
         else:
             acc = 0
             cm_fig = px.imshow([[0, 0], [0, 0]], text_auto=True, title="Sin datos")
+
         acc_card = [html.H4("Exactitud del modelo"), html.H2(f"{acc}%")]
-        # Otras gráficas
         age_fig = px.histogram(df, x="age", nbins=20, title="Distribución de edades")
         ts_fig = px.line(df, x="predicted_at", y="result", title="Histórico de predicciones")
         table_data = df.sort_values("predicted_at", ascending=False).head(20).to_dict("records")
+
         return total_card, pos_card, acc_card, update_card, cm_fig, age_fig, ts_fig, table_data
     except Exception as e:
         print(f"Error en update_dashboard: {str(e)}")
-        # Valores por defecto en caso de error
         total_card = [html.H4("Total"), html.H2("--")]
         pos_card = [html.H4("Positivos"), html.H2("--")]
         update_card = [html.H4("Última actualización"), html.P("Error de conexión")]
@@ -235,7 +233,7 @@ def update_dashboard(n):
         table_data = []
         return total_card, pos_card, acc_card, update_card, cm_fig, age_fig, ts_fig, table_data
 
-# Nuevo callback para la predicción
+# ✅ Mejora aplicada aquí
 @app.callback(
     Output("prediction-output", "children"),
     Input("predict-button", "n_clicks"),
@@ -259,13 +257,12 @@ def update_dashboard(n):
     ]
 )
 def make_prediction(n_clicks, age, job, marital, education, default, balance, housing, loan, contact, day, month, duration, campaign, pdays, previous, poutcome):
-    if n_clicks < 1:
+    if n_clicks == 0:
         return ""
-    
-    # Validar que todos los campos estén llenos
+
     if any(v is None for v in [age, job, marital, education, default, balance, housing, loan, contact, day, month, duration, campaign, pdays, previous, poutcome]):
         return "Por favor, completa todos los campos."
-    
+
     data = {
         "age": age,
         "job": job,
@@ -284,25 +281,27 @@ def make_prediction(n_clicks, age, job, marital, education, default, balance, ho
         "previous": previous,
         "poutcome": poutcome,
     }
-    
+
     try:
-        # Ajusta la URL si el endpoint o puerto es diferente
         response = requests.post("http://localhost:8000/api/predict", json=data)
         if response.status_code == 200:
             result = response.json()
-            # Asume que la respuesta tiene un campo 'prediction' o 'result' con 0/1
             prediction = result.get("prediction") or result.get("result")
-            return f"Predicción: {'Sí (aceptará el depósito)' if prediction == 1 else 'No (no aceptará el depósito)'}"
+            # 🔹 Mejora: manejo robusto del valor devuelto
+            if str(prediction).lower() in ["1", "yes", "true", "1.0"]:
+                return "Predicción: Sí (aceptará el depósito)"
+            elif str(prediction).lower() in ["0", "no", "false", "0.0"]:
+                return "Predicción: No (no aceptará el depósito)"
+            else:
+                return f"Resultado inesperado del modelo: {prediction}"
         else:
             return f"Error en la predicción: {response.status_code} - {response.text}"
     except Exception as e:
         return f"Error de conexión: {str(e)}"
 
 def cleanup():
-    """Limpia las conexiones al cerrar"""
     print("\n🔄 Cerrando conexiones...")
     try:
-        # Cerrar cualquier conexión pendiente
         from app.dashboards.db_utils import close_all_connections
         close_all_connections()
     except:
@@ -316,9 +315,8 @@ if __name__ == "__main__":
         print("\n⚡ Señal de interrupción recibida")
         cleanup()
         sys.exit(0)
-    # Registrar el manejador para SIGINT (Ctrl+C)
     signal.signal(signal.SIGINT, signal_handler)
-   
+
     try:
         print("🚀 Iniciando dashboard... (Presiona Ctrl+C para detener)")
         app.run(debug=True, port=8050)
