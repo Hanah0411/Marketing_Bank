@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+dash
+pandas
+scikit-learn
+psycopg2-binary
+

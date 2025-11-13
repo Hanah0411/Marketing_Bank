@@ -1,0 +1,95 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.env
+.venv
+env.bak/
+venv.bak/
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.settings
+.classpath
+*.sublime-workspace
+*.sublime-project
+
+# Logs y archivos temporales
+logs/*
+!logs/.gitkeep
+*.log
+local_settings.py
+db.sqlite3
+*.db
+temp/
+tmp/
+
+# Archivos de configuración con datos sensibles
+config.py
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# Archivos de coverage y testing
+.coverage
+.tox/
+.nox/
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+htmlcov/
+
+# Archivos de distribución
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Archivos específicos del proyecto
+*.pkl
+model/*.pkl
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Archivos de dependencias
+package-lock.json
+yarn.lock
